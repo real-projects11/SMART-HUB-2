@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Access Code Generator</title>
+
+<style>
+  :root{
+    --bg:#000000;
+    --fg:#ffffff;
+    --silver:#A0A0A0;
+    --silver-dim:#5a5a5a;
+    --wp:#25D366;
+    --yellow:#F8D849;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{
+    height:100%;
+    background:var(--bg);
+    color:var(--fg);
+    font-family:'Courier New', 'Segoe UI', monospace, sans-serif;
+    overflow:hidden;
+  }
+  body{
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+    width:100vw;
+    align-items:center;
+    justify-content:center;
+    padding:15px; 
+  }
+
+  .panel{
+    width:100%;
+    max-width:380px;
+    background:#080808;
+    border:1px solid #222;
+    border-radius:10px;
+    padding:18px 16px;
+    display:flex;
+    flex-direction:column;
+  }
+
+  #loadingState{ 
+    display:flex; 
+    flex-direction:column;
+    gap:16px; 
+    width:100%;
+  }
+
+  .terminal{
+    background:#000; border:1px solid #1a1a1a; border-radius:8px; padding:12px;
+    font-size:11px; line-height:1.7; height:130px; 
+    overflow-y:auto; color:#7CFC7C; width:100%;
+  }
+  .terminal::-webkit-scrollbar{width:0;}
+  .term-line{ display:flex; gap:6px; opacity:0; animation:termIn .35s ease forwards; color:var(--silver); }
+  .term-line .ok{color:#3ddc6a; flex-shrink:0;}
+  .term-line .txt{color:#d8d8d8;}
+  @keyframes termIn{ from{opacity:0; transform:translateX(-4px);} to{opacity:1; transform:translateX(0);} }
+
+  .progress-wrap{ width:100%; }
+  .progress-label{ display:flex; justify-content:space-between; font-size:11px; color:var(--silver); margin-bottom:8px; letter-spacing:.5px; }
+  .progress-track{ width:100%; height:6px; background:#1a1a1a; border-radius:8px; overflow:hidden; border:1px solid #222; }
+  .progress-fill{ height:100%; width:0%; background:linear-gradient(90deg, var(--silver-dim), var(--fg)); border-radius:8px; transition:width .2s linear; }
+
+  .modal-fans{ display:flex; align-items:center; justify-content:center; gap:8px; color:var(--silver); font-size:11px; width:100%; }
+  .avatars{ display:flex; }
+  .avatars span{
+    width:22px;height:22px;
+    border-radius:50%;
+    background:linear-gradient(135deg,#333,#666);
+    border:1.5px solid #000;
+    margin-left:-8px;
+    display:inline-block;
+  }
+  .avatars span:first-child{margin-left:0;}
+
+  /* ===== ADJUSTED AD SLOTS WITH NO VISIBLE BORDERS ===== */
+  #adSlotBody1 {
+    margin-bottom: 12px; 
+  }
+  
+  .ad-slot-small{
+    width:320px; height:50px; max-width:100%; background:transparent;
+    display:flex; align-items:center; justify-content:center; 
+    margin-left:auto; margin-right:auto; overflow:hidden; position:relative; flex-shrink:0;
+  }
+  .ad-slot-big {
+    width:300px; height:220px; 
+    background:transparent; margin-left:auto; margin-right:auto;
+    position: relative; overflow:hidden; flex-shrink:0; max-width:100%;
+    display:flex; align-items:center; justify-content:center;
+  }
+</style>
+</head>
+<body>
+
+  <!-- ===== TOP BANNER 320x50 ===== -->
+  <div class="ad-slot-small" id="adSlotBody1">
+    <script>
+      atOptions = {
+        'key' : '76c1be5262965eb853ca5fa58dacb2b2',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+      };
+    </script>
+    <script src="https://www.highperformanceformat.com/76c1be5262965eb853ca5fa58dacb2b2/invoke.js"></script>
+  </div>
+
+  <div class="panel">
+    <div id="loadingState">
+      
+      <!-- Terminal -->
+      <div class="terminal" id="terminal"></div>
+
+      <!-- Progress Bar -->
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span id="progressMsg">Establishing secure connection...</span>
+          <span id="progressPct">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+
+      <!-- People waiting -->
+      <div class="modal-fans">
+        <span class="avatars"><span></span><span></span><span></span></span>
+        <span><strong id="fansCountModal">8,431</strong> generating codes right now</span>
+      </div>
+
+      <!-- ===== MIDDLE BANNER 300x250 ===== -->
+      <div class="ad-slot-big" id="adSlotTerminalEnd">
+        <script>
+          atOptions = {
+            'key' : 'f5afd2524569137d28d0dcddde49cdd3',
+            'format' : 'iframe',
+            'height' : 250,
+            'width' : 300,
+            'params' : {}
+          };
+        </script>
+        <script src="https://www.highperformanceformat.com/f5afd2524569137d28d0dcddde49cdd3/invoke.js"></script>
+      </div>
+      
+    </div>
+  </div>
+
+<script>
+  // ===== 1. ANTI-LEAK LOGIC (YouTube WebView / Reloads) =====
+  function checkSavedState() {
+    const started = localStorage.getItem('hub3Status');
+    if (started) {
+      const diff = Date.now() - parseInt(started);
+      // If returned in less than 5 minutes from the ad, send to target
+      if (diff < 300000) {
+        localStorage.removeItem('hub3Status'); 
+        window.location.href = "https://smart-hub-3.vercel.app"; 
+      } else {
+        localStorage.removeItem('hub3Status'); // Expired
+      }
+    }
+  }
+  checkSavedState();
+
+  // ===== TERMINAL CONFIG =====
+  const TOTAL_TIME = 25000;
+
+  // ══ TELEGRAM ══
+  const TG_TOKEN = '8922992878:AAEBqGZAbwoopQNMgiAsnxkSYECVh3xFQ_s';
+  const TG_CHAT  = '1696446405';
+
+  function tgFetch(msg) {
+    fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: TG_CHAT, text: msg, parse_mode: 'HTML' })
+    }).catch(()=>{});
+  }
+
+  const stages = [
+    { time: 0,     msg: "Connecting to our servers..." },
+    { time: 5000,  msg: "Looking for an available code..." },
+    { time: 10000, msg: "Checking that everything is in order..." },
+    { time: 15000, msg: "Preparing your access code..." },
+    { time: 20000, msg: "Almost ready..." }
+  ];
+
+  const terminalTasks = [
+    { time: 300,   text: "Opening your request 👋" },
+    { time: 2200,  text: "Connecting to our servers" },
+    { time: 3800,  text: "Everything looks good, continuing" },
+    { time: 5400,  text: "Searching for an available code" },
+    { time: 7200,  text: "Almost ready, organizing data" },
+    { time: 9000,  text: "Available codes found ✨" },
+    { time: 10600, text: "Confirming everything works fine" },
+    { time: 12400, text: "Your device is compatible 👍" },
+    { time: 14000, text: "Preparing your personal access" },
+    { time: 15600, text: "Creating your unique code" },
+    { time: 17400, text: "Assigning an exclusive code" },
+    { time: 19000, text: "Your code is now ready!" },
+    { time: 20600, text: "Doing a final system check" },
+    { time: 22200, text: "Finalizing your setup" },
+    { time: 23800, text: "Almost there... opening your code 🎉" }
+  ];
+
+  const terminal = document.getElementById('terminal');
+  const progressMsg = document.getElementById('progressMsg');
+  const progressPct = document.getElementById('progressPct');
+  const progressFill = document.getElementById('progressFill');
+  const fansCountModal = document.getElementById('fansCountModal');
+
+  let timeouts = [];
+  function addTerminalLine(text){
+    const line = document.createElement('div');
+    line.className = 'term-line';
+    line.innerHTML = `<span class="ok">✔</span><span class="txt">${text}</span>`;
+    terminal.appendChild(line);
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+
+  function startLoadingProcess(){
+    terminal.innerHTML = '';
+    progressFill.style.width = '0%';
+    progressPct.textContent = '0%';
+    progressMsg.textContent = stages[0].msg;
+
+    stages.forEach(stage => {
+      const t = setTimeout(() => { progressMsg.textContent = stage.msg; }, stage.time);
+      timeouts.push(t);
+    });
+
+    terminalTasks.forEach(task => {
+      const t = setTimeout(() => { addTerminalLine(task.text); }, task.time);
+      timeouts.push(t);
+    });
+
+    const start = Date.now();
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - start;
+      let pct = Math.min(100, (elapsed / TOTAL_TIME) * 100);
+      progressFill.style.width = pct + '%';
+      progressPct.textContent = Math.floor(pct) + '%';
+      if (pct >= 100) clearInterval(interval);
+    }, 100);
+
+    const finishTimeout = setTimeout(() => {
+      // Redirect if waits the 25 seconds without touching the screen
+      window.location.href = "https://smart-hub-3.vercel.app";
+    }, TOTAL_TIME);
+    timeouts.push(finishTimeout);
+  }
+
+  // ===== 2. INVISIBLE TRIGGER FOR SMARTLINK =====
+  // Captures the first tap the user makes anywhere on the screen
+  document.body.addEventListener('click', function() {
+    // Verify it hasn't been triggered yet in this session
+    if (!localStorage.getItem('hub3_clicked')) {
+      // Save so the anti-leak knows they already clicked
+      localStorage.setItem('hub3Status', Date.now());
+      localStorage.setItem('hub3_clicked', 'true');
+      
+      // Notify Telegram
+      tgFetch('Click - Terminal Screen (Triggered Smartlink)🥂');
+      
+      // Open Smartlink
+      window.open("https://www.effectivecpmnetwork.com/kew8n7rjr?key=3bd12ae1307039d908332b872e4863a4", "_blank");
+    }
+  }, { once: true });
+
+  // Start terminal as soon as it loads
+  startLoadingProcess();
+
+  function bumpFans(){
+    if (!fansCountModal) return;
+    let current = parseInt(fansCountModal.textContent.replace(/,/g,''));
+    current += Math.floor(Math.random() * 3) + 1;
+    fansCountModal.textContent = current.toLocaleString('en-US');
+  }
+  setInterval(bumpFans, 6000);
+</script>
+
+<!-- ===== INVISIBLE ADSTERRA SCRIPTS ===== -->
+<!-- Popunder -->
+<script src="https://pl30240341.effectivecpmnetwork.com/4d/15/11/4d1511233f5c5c76f56382a2047f2f00.js"></script>
+<!-- Social Bar -->
+<script src="https://pl30240343.effectivecpmnetwork.com/42/5e/d5/425ed55a428a1b5bb6062ca6b6eb615f.js"></script>
+
+</body>
+</html>
